@@ -17,9 +17,9 @@
     "type": "git",
     "url": "git://github.com/chunshand/mark-highlight.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["mark","highlight"],
+  "author": "chunshand",
+  "license": "MIT",
   "devDependencies": {
     "@types/node": "^18.11.9",
     "rimraf": "^3.0.2",

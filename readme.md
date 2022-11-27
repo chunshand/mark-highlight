@@ -14,7 +14,9 @@
 ```html
 <script src="../dist/index.umd.js"></script>
 ```
-
+```bash
+npm install mark-highlight
+```
 ### 示例
 
 [示例代码](./examples/index.html)

@@ -13,6 +13,10 @@
     "dev": "rimraf ./dist && rollup --config --bundleConfigAsCjs -w",
     "build": "rimraf ./dist && rollup --config --bundleConfigAsCjs"
   },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/chunshand/mark-highlight.git"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

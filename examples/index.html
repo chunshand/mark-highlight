@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #content {
+            width: 320px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgb(0 0 0 / 7%);
+            padding: 16px;
+        }
+
+        .hig1 rect{
+            fill: #03a9f4;
+        }
+
+        .hig2 rect{
+            fill: #ff3366;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <button onclick="addUnderline()">划线</button>
+        <button onclick="addHighlight('hig1')">高亮1</button>
+        <button onclick="addHighlight('hig2')">高亮2</button>
+        <button onclick="mark.show()">show</button>
+        <button onclick="mark.hide()">hide</button>
+        <div id="content">
+            <h1 style="padding-left: 24px;">将进酒·君不见</h1>
+            <p><b>君不见，</b>黄河之水天上来，奔流到海不复回。</p>
+
+            <p style="margin-top:24px ;">君不见，高堂明镜悲白发，<img style="width: 32px;height:32px"
+                    src="https://vuejs.org/logo.svg" />朝如青丝暮成雪。</p>
+
+            <p>人生得意须尽欢，莫使金樽空对月。</p>
+
+            <p>天生我材必有用，千金散尽还复来。</p>
+
+            <p>烹羊宰牛且为乐，会须一饮三百杯。</p>
+
+            <p>岑夫子，丹丘生，将进酒，杯莫停。</p>
+
+            <p>与君歌一曲，请君为我倾耳听。</p>
+
+            <p>钟鼓馔玉不足贵，但愿长醉不愿醒。</p>
+
+            <p>古来圣贤皆寂寞，惟有饮者留其名。</p>
+
+            <p>陈王昔时宴平乐，斗酒十千恣欢谑。</p>
+
+            <p>主人何为言少钱，径须沽取对君酌。</p>
+
+            <p>五花马，千金裘，呼儿将出换美酒，与尔同销万古愁</p>
+        </div>
+    </div>
+
+    <script src="../dist/index.umd.js"></script>
+    <script>
+        let _rangeStr = "";
+        let mark = new Mark("content");
+        console.log(mark);
+        mark.on('selected', (data) => {
+            _rangeStr = data.rangeStr;
+        })
+        mark.render();
+
+        function addUnderline() {
+            console.log("划线");
+            mark.underline(_rangeStr, 'underline', (e) => {
+                let rangeStr = e.target.getAttribute('data-id')
+
+                let r = confirm("是否删除划线?")
+                if (r) {
+                    mark.remove(rangeStr, 'underline');
+                }
+
+            })
+            window.getSelection().removeAllRanges();
+        }
+
+        function addHighlight(classNmae) {
+            console.log("高亮");
+            mark.highlight(_rangeStr, classNmae, (e) => {
+                let rangeStr = e.target.getAttribute('data-id')
+                let r = confirm("是否删除高亮?")
+                if (r) {
+                    mark.remove(rangeStr, 'highlight');
+                }
+            })
+            window.getSelection().removeAllRanges();
+        }
+    </script>
+</body>
+
+</html>

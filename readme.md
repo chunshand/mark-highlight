@@ -14,6 +14,9 @@
 ```html
 <script src="../dist/index.umd.js"></script>
 ```
+
+or
+
 ```bash
 npm install mark-highlight
 ```
@@ -25,7 +28,7 @@ npm install mark-highlight
 ### 使用
 
 ```js
- let mark = new Mark("content"|HtmlElement);
+ let mark = new Mark("idName"|HtmlElement);
 ```
 
 **渲染**

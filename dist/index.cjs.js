@@ -1,6 +1,11 @@
 'use strict';
 
 var PREFIX = 'mark';
+var OnType;
+(function (OnType) {
+    OnType[OnType["render"] = 0] = "render";
+    OnType[OnType["selected"] = 1] = "selected";
+})(OnType || (OnType = {}));
 var Mark = /** @class */ (function () {
     function Mark(target) {
         /**
@@ -12,7 +17,7 @@ var Mark = /** @class */ (function () {
          */
         this.onArr = [];
         /**
-         * rangeStr 前缀 默认mark
+         * markStr 前缀 默认mark
          */
         this.prefix = PREFIX;
         /**
@@ -22,7 +27,7 @@ var Mark = /** @class */ (function () {
         /**
          * 需要标记的数组
          */
-        this.efiRange = [];
+        this.markRange = [];
         var node = null;
         if (typeof target == 'string') {
             node = document.getElementById(target);
@@ -80,7 +85,7 @@ var Mark = /** @class */ (function () {
                 var offsetX = _event.pageX - targetNodeRect.x;
                 var offsetY = _event.pageY - targetNodeRect.y;
                 // 判断一点是否在区间内
-                var arr = _this.efiRange.filter(function (item) {
+                var arr = _this.markRange.filter(function (item) {
                     return item.position.filter(function (item2) {
                         return (offsetX > item2.x1 && offsetX < item2.x2)
                             && (offsetY > item2.y1 && offsetY < item2.y2);
@@ -95,22 +100,23 @@ var Mark = /** @class */ (function () {
             });
             this._handletListener();
             this._update();
+            this._handleOn('render');
         }
         this._initStatus = true;
     };
     /**
- * 更新
- */
+     * 更新
+     */
     Mark.prototype.update = function () {
         var _this = this;
-        this.efiRange.forEach(function (item) {
+        this.markRange.forEach(function (item) {
             var svgDom = _this.svgDom;
-            var Fragment = svgDom.querySelector("[data-id='".concat(item.rangeStr, "']"));
+            var Fragment = svgDom.querySelector("[data-id='".concat(item.markStr, "']"));
             if (!Fragment) {
                 return;
             }
             Fragment.innerHTML = '';
-            var range = _this._handleEfiToRange(item.rangeStr);
+            var range = _this._handleEfiToRange(item.markStr);
             if (range.collapsed) {
                 return;
             }
@@ -125,95 +131,160 @@ var Mark = /** @class */ (function () {
             item.position = _position;
         });
     };
-    Mark.prototype.add = function (rangeStr, type, className, cb) {
-        if (className === void 0) { className = ''; }
-        var range = this._handleEfiToRange(rangeStr);
+    /**
+     * 添加单个标记
+     * @param data markData 数据
+     * @returns
+     */
+    Mark.prototype.add = function (data) {
+        var _a, _b;
+        var type = data.type;
+        var click = (_a = data.click) !== null && _a !== void 0 ? _a : null;
+        var range = this._handleEfiToRange(data.markStr);
         if (range.collapsed) {
             return;
         }
         var rects = range.getClientRects();
         var Fragment = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        if (className) {
-            Fragment.classList.add(className);
+        if (data.className) {
+            Fragment.classList.add(data.className);
         }
-        Fragment.setAttribute('data-id', rangeStr);
+        Fragment.setAttribute('data-id', data.markStr);
+        Fragment.setAttribute('data-type', data.type);
         Fragment.setAttribute('opacity', "0.6");
         var _position = [];
         for (var i = 0; i < rects.length; i++) {
             var rect = rects[i];
-            var _a = this._handleCreateSvgG(rect, type), group = _a.group, position = _a.position;
+            var _c = this._handleCreateSvgG(rect, type), group = _c.group, position = _c.position;
             Fragment.appendChild(group);
             _position.push(position);
         }
-        this.efiRange.push({
-            rangeStr: rangeStr,
+        this.markRange.push({
+            markStr: data.markStr,
             range: range,
             type: type,
             position: _position,
-            node: Fragment
+            node: Fragment,
+            data: (_b = data.data) !== null && _b !== void 0 ? _b : {}
         });
-        if (cb) {
-            Fragment.addEventListener('click', cb);
+        if (click && typeof click == 'function') {
+            Fragment.addEventListener('click', function (event) {
+                var markStr = this.getAttribute('data-id');
+                click.apply(this, [event, markStr]);
+            });
         }
         var svgDom = this.svgDom;
         svgDom.appendChild(Fragment);
     };
     /**
-     * 删除标记
-     * @param rangeStr
-     * @param type
+     * 删除单个标记
+     * @param markStr
+     * @param type markType
      */
-    Mark.prototype.remove = function (rangeStr, type) {
+    Mark.prototype.remove = function (markStr, type) {
         var _a;
-        var arr = this.efiRange.map(function (item, index) {
+        var arr = this.markRange.map(function (item, index) {
             return { item: item, index: index };
         }).filter(function (data) {
-            return data.item.rangeStr == rangeStr && data.item.type == type;
+            return data.item.markStr == markStr && (type ? data.item.type == type : true);
         });
         var _index = 0;
         var svgDom = this.svgDom;
         for (var i = 0; i < arr.length; i++) {
             var index = arr[i].index - _index;
             var item = arr[i].item;
-            (_a = svgDom.querySelector("[data-id='".concat(item.rangeStr, "']"))) === null || _a === void 0 ? void 0 : _a.remove();
-            this.efiRange.splice(index, 1);
+            (_a = svgDom.querySelector("[data-id='".concat(item.markStr, "']"))) === null || _a === void 0 ? void 0 : _a.remove();
+            this.markRange.splice(index, 1);
             _index++;
         }
     };
-    // public mark(rangeStr: string, className: string, cb: Function) {
-    //     this.add(rangeStr, "mark", className, cb);
-    // }
     /**
      * 添加高亮
-     * @param rangeStr
+     * @param markStr
      * @param className
-     * @param cb
+     * @param click
+     * @param data
      */
-    Mark.prototype.highlight = function (rangeStr, className, cb) {
-        this.add(rangeStr, "highlight", className, cb);
+    Mark.prototype.highlight = function (markStr, className, click, data) {
+        if (data === void 0) { data = {}; }
+        this.add({
+            type: "highlight",
+            markStr: markStr,
+            className: className,
+            click: click,
+            data: data
+        });
     };
     /**
      * 添加下划线
-     * @param rangeStr
+     * @param markStr
      * @param className
-     * @param cb
+     * @param click
+     * @param data
      */
-    Mark.prototype.underline = function (rangeStr, className, cb) {
-        this.add(rangeStr, "underline", className, cb);
+    Mark.prototype.underline = function (markStr, className, click, data) {
+        if (data === void 0) { data = {}; }
+        this.add({
+            type: "underline",
+            markStr: markStr,
+            className: className,
+            click: click,
+            data: data
+        });
     };
     /**
      * 全部显示
      */
-    Mark.prototype.show = function () {
-        var _a;
-        (_a = this.svgDom) === null || _a === void 0 ? void 0 : _a.setAttribute('opacity', "1");
+    Mark.prototype.show = function (type) {
+        var _a, _b;
+        if (type) {
+            (_a = this.svgDom) === null || _a === void 0 ? void 0 : _a.querySelectorAll("g[data-type=\"".concat(type, "\"]")).forEach(function (item) {
+                item.setAttribute('display', "auto");
+            });
+        }
+        else {
+            (_b = this.svgDom) === null || _b === void 0 ? void 0 : _b.querySelectorAll("g").forEach(function (item) {
+                item.setAttribute('display', "auto");
+            });
+        }
     };
     /**
      * 全部隐藏
      */
-    Mark.prototype.hide = function () {
+    Mark.prototype.hide = function (type) {
+        var _a, _b;
+        if (type) {
+            (_a = this.svgDom) === null || _a === void 0 ? void 0 : _a.querySelectorAll("g[data-type=\"".concat(type, "\"]")).forEach(function (item) {
+                item.setAttribute('display', "none");
+            });
+        }
+        else {
+            (_b = this.svgDom) === null || _b === void 0 ? void 0 : _b.querySelectorAll("g").forEach(function (item) {
+                item.setAttribute('display', "none");
+            });
+        }
+    };
+    /**
+     * 清空所有标记 不传type 清空所有
+     * @param markStr
+     * @param type markType
+     */
+    Mark.prototype.clear = function (type) {
         var _a;
-        (_a = this.svgDom) === null || _a === void 0 ? void 0 : _a.setAttribute('opacity', "0");
+        var arr = this.markRange.map(function (item, index) {
+            return { item: item, index: index };
+        }).filter(function (data) {
+            return type ? data.item.type == type : true;
+        });
+        var _index = 0;
+        var svgDom = this.svgDom;
+        for (var i = 0; i < arr.length; i++) {
+            var index = arr[i].index - _index;
+            var item = arr[i].item;
+            (_a = svgDom.querySelector("[data-id='".concat(item.markStr, "']"))) === null || _a === void 0 ? void 0 : _a.remove();
+            this.markRange.splice(index, 1);
+            _index++;
+        }
     };
     /**
     * 监听
@@ -223,8 +294,18 @@ var Mark = /** @class */ (function () {
     Mark.prototype.on = function (key, func) {
         this.onArr.push({ key: key, func: func });
     };
-    Mark.prototype.getRanges = function () {
-        return this.efiRange;
+    /**
+     * 获取所有的标记
+     * @returns
+     */
+    Mark.prototype.getMarks = function () {
+        return this.markRange.map(function (item) {
+            return {
+                markStr: item.markStr,
+                type: item.type,
+                data: item.data
+            };
+        });
     };
     /**
      * 视图更新
@@ -268,8 +349,8 @@ var Mark = /** @class */ (function () {
         }
         var range = Selection.getRangeAt(0);
         // 通过查找开始元素 和结束元素在 dom 内容范围
-        var rangeStr = this._handleSelectRangePostion(range);
-        this._handleOn('selected', { rangeStr: rangeStr });
+        var markStr = this._handleSelectRangePostion(range);
+        this._handleOn('selected', { markStr: markStr });
     };
     /**
      * 范围换取efi
@@ -302,12 +383,12 @@ var Mark = /** @class */ (function () {
     };
     /**
      * 通过efi字符转成range
-     * @param rangeStr 标识范围的字符
+     * @param markStr 标识范围的字符
      * @returns
      */
-    Mark.prototype._handleEfiToRange = function (rangeStr) {
+    Mark.prototype._handleEfiToRange = function (markStr) {
         var range = document.createRange();
-        var obj = this._handleCheckEfi(rangeStr);
+        var obj = this._handleCheckEfi(markStr);
         if (!obj) {
             return range;
         }
@@ -342,9 +423,9 @@ var Mark = /** @class */ (function () {
             item === null || item === void 0 ? void 0 : item.func(data);
         });
     };
-    Mark.prototype._handleCheckEfi = function (rangeStr) {
+    Mark.prototype._handleCheckEfi = function (markStr) {
         var reg = new RegExp("".concat(this.prefix, "(.*,.*)"));
-        var _arr = rangeStr.match(reg);
+        var _arr = markStr.match(reg);
         if (!_arr || _arr.length < 2) {
             return null;
         }
@@ -409,7 +490,7 @@ var Mark = /** @class */ (function () {
      * 创建svg g
      * @param rect
      * @param type
-     * @param rangeStr
+     * @param markStr
      * @returns
      */
     Mark.prototype._handleCreateSvgG = function (rect, type) {

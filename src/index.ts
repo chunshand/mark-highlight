@@ -8,16 +8,30 @@ interface eftObj {
     end_node: Node | null
 }
 type markType = "mark" | "highlight" | "underline";
+enum OnType {
+    'render',
+    'selected'
+}
+type onType = keyof typeof OnType;
 interface position {
     x1: number, y1: number, x2: number, y2: number
 }
-interface efiRange {
+type Data = Record<string, string>;
+interface markRange {
     range: Range,
-    rangeStr: string,
+    markStr: string,
+    data: Data,
     type: markType,
     position: position[],
     node: SVGGElement
 };
+interface markData {
+    type: markType,
+    markStr: string,
+    className: string,
+    data?: Data,
+    click: Function
+}
 export default class Mark {
     /**
      * 渲染Element
@@ -36,7 +50,7 @@ export default class Mark {
      */
     private onArr: { key: string, func: Function }[] = [];
     /**
-     * rangeStr 前缀 默认mark
+     * markStr 前缀 默认mark
      */
     private prefix = PREFIX;
     /**
@@ -46,7 +60,7 @@ export default class Mark {
     /**
      * 需要标记的数组
      */
-    private efiRange: efiRange[] = [];
+    private markRange: markRange[] = [];
     /**
      * svg dom
      */
@@ -113,7 +127,7 @@ export default class Mark {
                 let offsetX = _event.pageX - targetNodeRect.x;
                 let offsetY = _event.pageY - targetNodeRect.y;
                 // 判断一点是否在区间内
-                let arr = this.efiRange.filter((item) => {
+                let arr = this.markRange.filter((item) => {
                     return item.position.filter((item2) => {
                         return (offsetX > item2.x1 && offsetX < item2.x2)
                             && (offsetY > item2.y1 && offsetY < item2.y2)
@@ -128,21 +142,23 @@ export default class Mark {
             })
             this._handletListener();
             this._update();
+            this._handleOn('render')
         }
         this._initStatus = true;
     }
+
     /**
- * 更新
- */
+     * 更新
+     */
     private update() {
-        this.efiRange.forEach((item) => {
+        this.markRange.forEach((item) => {
             let svgDom = this.svgDom as SVGElement;
-            let Fragment = svgDom.querySelector(`[data-id='${item.rangeStr}']`) as Element;
+            let Fragment = svgDom.querySelector(`[data-id='${item.markStr}']`) as Element;
             if (!Fragment) {
                 return;
             }
             Fragment.innerHTML = '';
-            let range = this._handleEfiToRange(item.rangeStr);
+            let range = this._handleEfiToRange(item.markStr);
             if (range.collapsed) {
                 return;
             }
@@ -158,17 +174,26 @@ export default class Mark {
         })
     }
 
-    public add(rangeStr: string, type: markType, className = '', cb: any) {
-        let range = this._handleEfiToRange(rangeStr);
+    /**
+     * 添加单个标记
+     * @param data markData 数据
+     * @returns 
+     */
+    public add(data: markData) {
+
+        let type = data.type;
+        let click = data.click ?? null;
+        let range = this._handleEfiToRange(data.markStr);
         if (range.collapsed) {
             return;
         }
         let rects = range.getClientRects();
         let Fragment = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-        if (className) {
-            Fragment.classList.add(className);
+        if (data.className) {
+            Fragment.classList.add(data.className);
         }
-        Fragment.setAttribute('data-id', rangeStr);
+        Fragment.setAttribute('data-id', data.markStr);
+        Fragment.setAttribute('data-type', data.type);
         Fragment.setAttribute('opacity', "0.6");
         let _position: position[] = [];
         for (let i = 0; i < rects.length; i++) {
@@ -177,74 +202,131 @@ export default class Mark {
             Fragment.appendChild(group);
             _position.push(position);
         }
-        this.efiRange.push({
-            rangeStr,
+        this.markRange.push({
+            markStr: data.markStr,
             range,
             type,
             position: _position,
-            node: Fragment
+            node: Fragment,
+            data: data.data ?? {}
         });
-        if (cb) {
-            Fragment.addEventListener('click', cb);
+        if (click && typeof click == 'function') {
+            Fragment.addEventListener('click', function (event: MouseEvent) {
+                let markStr = this.getAttribute('data-id');
+                click.apply(this, [event, markStr]);
+            });
         }
         let svgDom = this.svgDom as SVGElement;
         svgDom.appendChild(Fragment)
 
     }
+
     /**
-     * 删除标记
-     * @param rangeStr 
-     * @param type 
+     * 删除单个标记
+     * @param markStr 
+     * @param type markType
      */
-    public remove(rangeStr: string, type: markType) {
-        let arr: { item: efiRange, index: number }[] = this.efiRange.map((item, index) => {
+    public remove(markStr: string, type?: markType) {
+        let arr: { item: markRange, index: number }[] = this.markRange.map((item, index) => {
             return { item, index };
         }).filter((data) => {
-            return data.item.rangeStr == rangeStr && data.item.type == type;
+            return data.item.markStr == markStr && (type ? data.item.type == type : true);
         })
         let _index = 0;
         let svgDom = this.svgDom as SVGElement;
         for (let i = 0; i < arr.length; i++) {
             let index = arr[i].index - _index;
             let item = arr[i].item;
-            svgDom.querySelector(`[data-id='${item.rangeStr}']`)?.remove();
-            this.efiRange.splice(index, 1);
+            svgDom.querySelector(`[data-id='${item.markStr}']`)?.remove();
+            this.markRange.splice(index, 1);
             _index++;
         }
     }
 
-    // public mark(rangeStr: string, className: string, cb: Function) {
-    //     this.add(rangeStr, "mark", className, cb);
-    // }
     /**
      * 添加高亮
-     * @param rangeStr 
+     * @param markStr 
      * @param className 
-     * @param cb 
+     * @param click
+     * @param data
      */
-    public highlight(rangeStr: string, className: string, cb: Function) {
-        this.add(rangeStr, "highlight", className, cb);
+    public highlight(markStr: string, className: string, click: Function, data: Data = {}) {
+        this.add({
+            type: "highlight",
+            markStr,
+            className,
+            click,
+            data
+        });
     }
+
     /**
      * 添加下划线
-     * @param rangeStr 
+     * @param markStr 
      * @param className 
-     * @param cb 
+     * @param click
+     * @param data
      */
-    public underline(rangeStr: string, className: string, cb: Function) {
-        this.add(rangeStr, "underline", className, cb);
+    public underline(markStr: string, className: string, click: Function, data: Data = {}) {
+        this.add({
+            type: "underline",
+            markStr,
+            className,
+            click,
+            data
+        });
     }
+
     /**
      * 全部显示
      */
-    public show() {
-        this.svgDom?.setAttribute('opacity', "1");
+    public show(type?: markType) {
+        if (type) {
+            this.svgDom?.querySelectorAll(`g[data-type="${type}"]`).forEach((item) => {
+                item.setAttribute('display', "auto")
+            })
+        } else {
+            this.svgDom?.querySelectorAll(`g`).forEach((item) => {
+                item.setAttribute('display', "auto")
+            })
+        }
     }
+
     /**
      * 全部隐藏
      */
-    public hide() {
-        this.svgDom?.setAttribute('opacity', "0");
+    public hide(type?: markType) {
+        if (type) {
+            this.svgDom?.querySelectorAll(`g[data-type="${type}"]`).forEach((item) => {
+                item.setAttribute('display', "none")
+            })
+        } else {
+            this.svgDom?.querySelectorAll(`g`).forEach((item) => {
+                item.setAttribute('display', "none")
+            })
+        }
+    }
+
+    /**
+     * 清空所有标记 不传type 清空所有
+     * @param markStr 
+     * @param type markType
+     */
+    public clear(type?: markType) {
+        let arr: { item: markRange, index: number }[] = this.markRange.map((item, index) => {
+            return { item, index };
+        }).filter((data) => {
+            return type ? data.item.type == type : true;
+        })
+        let _index = 0;
+        let svgDom = this.svgDom as SVGElement;
+        for (let i = 0; i < arr.length; i++) {
+            let index = arr[i].index - _index;
+            let item = arr[i].item;
+            svgDom.querySelector(`[data-id='${item.markStr}']`)?.remove();
+            this.markRange.splice(index, 1);
+            _index++;
+        }
     }
 
     /**
@@ -252,11 +334,21 @@ export default class Mark {
     * @param key string
     * @param func function
     */
-    public on(key: string, func: Function) {
+    public on(key: onType, func: Function) {
         this.onArr.push({ key, func });
     }
-    public getRanges() {
-        return this.efiRange;
+    /**
+     * 获取所有的标记
+     * @returns 
+     */
+    public getMarks() {
+        return this.markRange.map((item) => {
+            return {
+                markStr: item.markStr,
+                type: item.type,
+                data: item.data
+            }
+        });
     }
     /**
      * 视图更新
@@ -294,8 +386,8 @@ export default class Mark {
         }
         let range = Selection.getRangeAt(0);
         // 通过查找开始元素 和结束元素在 dom 内容范围
-        let rangeStr = this._handleSelectRangePostion(range);
-        this._handleOn('selected', { rangeStr })
+        let markStr = this._handleSelectRangePostion(range);
+        this._handleOn('selected', { markStr })
     }
     /**
      * 范围换取efi
@@ -328,12 +420,12 @@ export default class Mark {
     }
     /**
      * 通过efi字符转成range
-     * @param rangeStr 标识范围的字符
+     * @param markStr 标识范围的字符
      * @returns 
      */
-    private _handleEfiToRange(rangeStr: string): Range {
+    private _handleEfiToRange(markStr: string): Range {
         let range = document.createRange();
-        let obj = this._handleCheckEfi(rangeStr);
+        let obj = this._handleCheckEfi(markStr);
         if (!obj) {
             return range;
         }
@@ -368,9 +460,9 @@ export default class Mark {
             item?.func(data)
         })
     }
-    private _handleCheckEfi(rangeStr: string): eftObj | null {
+    private _handleCheckEfi(markStr: string): eftObj | null {
         let reg = new RegExp(`${this.prefix}\(.*\,.*\)`)
-        let _arr = rangeStr.match(reg);
+        let _arr = markStr.match(reg);
         if (!_arr || _arr.length < 2) {
             return null;
         }
@@ -435,7 +527,7 @@ export default class Mark {
      * 创建svg g
      * @param rect 
      * @param type 
-     * @param rangeStr 
+     * @param markStr 
      * @returns 
      */
     private _handleCreateSvgG(rect: DOMRect, type: markType) {

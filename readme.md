@@ -1,25 +1,28 @@
 # mark-highlight(beta)
 
-`mark-highlight`是一个简单轻量的内容选中划线高亮小工具。
+Languages: [简体中文](/README.zh.md) | English
 
-- 保留元素的内部结构
-- 对于选中区域的标记操作，有很简单的数据符号，方便下次访问时再次渲染绘制选中区域，前提是内容不变的情况下。
-- 适用于笔记、博客、电子书、批注等场景。
+
+mark-highlight is a simple  select the underline tool , Does not pollute the element structure
+
 
 ![./image/demo.png](./image/demo.png)
 
-- 支持下划线 高亮类型的标记
-- 支持标记区域点击事件
-- 支持标记区域设置自定义类名
-- 支持视图更新标记区域同步更新
+- underline / highlight
+- custom click function
+- custom class
+- auto resize
 
-### 演示
+### demo
+[code](./examples/index.html)
 
-[演示地址](https://code.juejin.cn/pen/7171034100965310472)
+[online demo](https://code.juejin.cn/pen/7171034100965310472)
 
-老铁来个star呗！！！
+star！！！
+star！！！
+star！！！
 
-### 安装
+### installation
 
 ```html
 <script src="../dist/index.umd.js"></script>
@@ -30,78 +33,83 @@ or
 ```bash
 npm install mark-highlight
 ```
-### 示例
-
-[示例代码](./examples/index.html)
 
 
-### 使用
+### use
 
 ```js
- let mark = new Mark("idName"|HtmlElement);
-```
-
-**渲染**
-
-建议content元素在内容填充完毕后，执行此方法。
-
-```js
+let mark = new Mark("idName"|HtmlElement);
 mark.render();
 ```
 
-**选择后回调事件**
+**on**
 ```js
+mark.on('render', (el) => {
+    console.log('render dom',el);
+})
 mark.on('selected', (data) => {
-    let _rangeStr = data.rangeStr;
+    let markStr = data.markStr;
+    let {
+        top_left,
+        top_center,
+        top_right,
+        // ...
+    } = data.position;
 })
 ```
 
-**设置高亮**
+**add highlight**
 
 ```js
-mark.highlight(_rangeStr, 'className', (e) => {
-    // 高亮区域点击后回调
-    // 获取点击元素的_rangeStr
-    let rangeStr = e.target.getAttribute('data-id')
-   
+mark.highlight(markStr, 'className', (e) => {
+    // click function
+    let _markStr = e.target.getAttribute('data-id')
 })
 ```
-**设置下划线**
+**add underline**
 ```js
-mark.underline(_rangeStr, 'className', (e) => {
-    let rangeStr = e.target.getAttribute('data-id')
+mark.underline(markStr, 'className', (e) => {
+    let _markStr = e.target.getAttribute('data-id')
 })
 ```
 
-**删除标记**
+**remove mark**
 
 ```js
-mark.remove(rangeStr, 'underline|highlight');
+mark.remove(markStr, 'underline|highlight');
 ```
 
-**添加标记**
+**add mark**
 
 ```js
-mark.add(rangeStr, 'underline|highlight','className',click:()=>{});
+mark.add({
+    markStr:"",
+    type: 'underline|highlight',
+    className: "",
+    data: {},
+    clirk:()=>{},
+
+});
 ```
 
-**显示所有**
+**show all mark**
 ```js
 mark.show();
 ```
 
-**隐藏所有**
+**hide all mark**
 ```js
 mark.hide();
 ```
 
-## 任务列表
-
-- [ ] 视图更新优化处理
-- [ ] 判断rangeStr是否存在交集rangeStr
-- [ ] 显示隐藏，支持针对类型与rangeStr
-- [ ] 强制重新绘制
-- [ ] 批量mark
-- [ ] 获取rangeStr区域的坐标点，方便浮动工具栏的应用
 
 
+**clear mark**
+```js
+mark.clear();
+```
+
+**get all mark**
+```js
+mark.getMarks();
+```

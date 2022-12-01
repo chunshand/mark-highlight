@@ -76,9 +76,6 @@
                 rootDom.appendChild(svgDom);
                 parentNode === null || parentNode === void 0 ? void 0 : parentNode.replaceChild(rootDom, this.targetElement);
                 this.rootElement = rootDom;
-                if (!this.rootElement) {
-                    return;
-                }
                 this.targetNodeRect = this.rootElement.getBoundingClientRect();
                 this.targetNode.addEventListener('click', function (event) {
                     if (!_this.rootElement) {
@@ -104,7 +101,7 @@
                 });
                 this._handletListener();
                 this._update();
-                this._handleOn('render');
+                this._handleOn('render', this.rootElement);
             }
             this._initStatus = true;
         };
@@ -358,7 +355,6 @@
             var Rects = range.getClientRects();
             var topRects = Rects[0];
             var bottomRects = Rects[Rects.length - 1];
-            console.log(topRects);
             var _top = (_b = (_a = this.targetNodeRect) === null || _a === void 0 ? void 0 : _a.top) !== null && _b !== void 0 ? _b : 0;
             var _left = (_d = (_c = this.targetNodeRect) === null || _c === void 0 ? void 0 : _c.left) !== null && _d !== void 0 ? _d : 0;
             // 计算位置

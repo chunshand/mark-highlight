@@ -27,37 +27,37 @@
 
 <body>
     <div class="main">
-        <button onclick="addUnderline()">划线</button>
-        <button onclick="addHighlight('hig1')">高亮1</button>
-        <button onclick="addHighlight('hig2')">高亮2</button>
+        <button onclick="addUnderline()">underline</button>
+        <button onclick="addHighlight('hig1')">highlight 1</button>
+        <button onclick="addHighlight('hig2')">highlight 2</button>
         <button onclick="mark.show()">show</button>
-        <button onclick="mark.hide('highlight')">hide</button>
+        <button onclick="mark.hide()">hide</button>
         <div id="content">
-            <h1 style="padding-left: 24px;">将进酒·君不见</h1>
-            <p><b>君不见，</b>黄河之水天上来，奔流到海不复回。</p>
+            <h1 style="padding-left: 24px;">Do you not see the Yellow River come from the sky</h1>
+            <p>>Rushing into the sea and ne'er come back?</p>
 
-            <p style="margin-top:24px ;">君不见，高堂明镜悲白发，<img style="width: 32px;height:32px"
-                    src="https://vuejs.org/logo.svg" />朝如青丝暮成雪。</p>
+            <p style="margin-top:24px ;"><img style="width: 32px;height:32px"
+                src="https://vuejs.org/logo.svg" />Do you not see the mirror bright in chamber high</p>
 
-            <p>人生得意须尽欢，莫使金樽空对月。</p>
+            <p>Grieve o'er your snow-white hair that once was silken back?</p>
 
-            <p>天生我材必有用，千金散尽还复来。</p>
+            <p>When hopes are won, oh, drink your fill in high delight</p>
 
-            <p>烹羊宰牛且为乐，会须一饮三百杯。</p>
+            <p>And never leave your wine cup empty in moonlight!</p>
 
-            <p>岑夫子，丹丘生，将进酒，杯莫停。</p>
+            <p>Heaven has made us talents; we're not made in vain.</p>
 
-            <p>与君歌一曲，请君为我倾耳听。</p>
+            <p>A thousand gold coins spent, more will turn up again.</p>
 
-            <p>钟鼓馔玉不足贵，但愿长醉不愿醒。</p>
+            <p>Kill a cow, cook a sheep and let us merry be,</p>
 
-            <p>古来圣贤皆寂寞，惟有饮者留其名。</p>
+            <p>And drink three hundred cupfuls of wine in high glee!</p>
 
-            <p>陈王昔时宴平乐，斗酒十千恣欢谑。</p>
+            <p>Dear friends of mine,</p>
 
-            <p>主人何为言少钱，径须沽取对君酌。</p>
+            <p>Cheer up, cheer up!</p>
 
-            <p>五花马，千金裘，呼儿将出换美酒，与尔同销万古愁</p>
+            <p>Do not put down your cup!</p>
         </div>
     </div>
 
@@ -68,33 +68,34 @@
         console.log(mark);
         mark.on('selected', (data) => {
             _rangeStr = data.markStr;
-            let arr = [
-                data.position.top_left,
-                data.position.top_center,
-                data.position.top_right,
-                
-                data.position.center_left,
-                data.position.center,
-                data.position.center_right,
+            // set position dom
+            // let arr = [
+            //     data.position.top_left,
+            //     data.position.top_center,
+            //     data.position.top_right,
 
-                data.position.bottom_left,
-                data.position.bottom_center,
-                data.position.bottom_right,
-            ];
-            for (let i in arr) {
-                let p = arr[i];
-                let el = document.querySelector('.mark-view');
-                let dom = document.createElement('span')
-                dom.style.width = '16px';
-                dom.style.height = '16px';
-                dom.style.backgroundColor = '#000'
-                dom.style.color = '#fff'
-                dom.textContent = i
-                dom.style.position = 'absolute'
-                dom.style.left = p[0] + 'px';
-                dom.style.top = p[1] + 'px';
-                el.appendChild(dom);
-            }
+            //     data.position.center_left,
+            //     data.position.center,
+            //     data.position.center_right,
+
+            //     data.position.bottom_left,
+            //     data.position.bottom_center,
+            //     data.position.bottom_right,
+            // ];
+            // for (let i in arr) {
+            //     let p = arr[i];
+            //     let el = document.querySelector('.mark-view');
+            //     let dom = document.createElement('span')
+            //     dom.style.width = '16px';
+            //     dom.style.height = '16px';
+            //     dom.style.backgroundColor = '#000'
+            //     dom.style.color = '#fff'
+            //     dom.textContent = i
+            //     dom.style.position = 'absolute'
+            //     dom.style.left = p[0] + 'px';
+            //     dom.style.top = p[1] + 'px';
+            //     el.appendChild(dom);
+            // }
 
         })
         mark.on('render', () => {
@@ -103,11 +104,10 @@
         mark.render();
 
         function addUnderline() {
-            console.log("划线");
             mark.underline(_rangeStr, 'underline', (e) => {
                 let rangeStr = e.target.getAttribute('data-id')
 
-                let r = confirm("是否删除划线?")
+                let r = confirm("Whether to delete it?")
                 if (r) {
                     mark.remove(rangeStr, 'underline');
                 }
@@ -117,12 +117,11 @@
         }
 
         function addHighlight(classNmae) {
-            console.log("高亮");
             mark.highlight(_rangeStr, classNmae,
                 (e, str) => {
                     console.log(str);
                     let rangeStr = e.target.getAttribute('data-id')
-                    let r = confirm("是否删除高亮?")
+                    let r = confirm("Whether to delete it?")
                     if (r) {
                         mark.remove(rangeStr, 'highlight');
                     }

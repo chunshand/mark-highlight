@@ -114,9 +114,6 @@ export default class Mark {
             rootDom.appendChild(svgDom);
             parentNode?.replaceChild(rootDom, this.targetElement);
             this.rootElement = rootDom;
-            if (!this.rootElement) {
-                return
-            }
             this.targetNodeRect = this.rootElement.getBoundingClientRect();
             this.targetNode.addEventListener('click', (event) => {
                 if (!this.rootElement) {
@@ -142,9 +139,10 @@ export default class Mark {
             })
             this._handletListener();
             this._update();
-            this._handleOn('render')
+            this._handleOn('render', this.rootElement)
         }
         this._initStatus = true;
+
     }
 
     /**
@@ -392,7 +390,6 @@ export default class Mark {
         let Rects = range.getClientRects();
         let topRects = Rects[0];
         let bottomRects = Rects[Rects.length - 1];
-        console.log(topRects);
         let _top = this.targetNodeRect?.top ?? 0;
         let _left = this.targetNodeRect?.left ?? 0;
         // 计算位置

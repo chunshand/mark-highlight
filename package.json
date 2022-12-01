@@ -1,6 +1,6 @@
 {
   "name": "mark-highlight",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "一个简单的选择划线高亮工具",
   "type": "module",
   "module": "dist/index.esm.js",

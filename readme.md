@@ -3,7 +3,7 @@
 Languages: [简体中文](/README.zh.md) | English
 
 
-mark-highlight is a simple  select the underline tool , Does not pollute the element structure
+mark-highlight is a simple tool，Highlight the content , Does not pollute the element structure
 
 
 ![./image/demo.png](./image/demo.png)

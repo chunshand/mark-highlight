@@ -22,7 +22,7 @@ Languages: 简体中文 | [English](/README.md)
 
 [在线演示](https://code.juejin.cn/pen/7171034100965310472)
 
-老铁来个star呗！！！
+如果感觉还不错的话，来个star~
 
 ### 安装
 

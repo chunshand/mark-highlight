@@ -18,9 +18,7 @@ mark-highlight is a simple  select the underline tool , Does not pollute the ele
 
 [online demo](https://code.juejin.cn/pen/7171034100965310472)
 
-star！！！
-star！！！
-star！！！
+If you feel okay, give me a star
 
 ### installation
 

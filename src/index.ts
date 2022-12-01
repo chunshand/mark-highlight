@@ -350,6 +350,7 @@ export default class Mark {
             }
         });
     }
+
     /**
      * 视图更新
      */
@@ -387,7 +388,29 @@ export default class Mark {
         let range = Selection.getRangeAt(0);
         // 通过查找开始元素 和结束元素在 dom 内容范围
         let markStr = this._handleSelectRangePostion(range);
-        this._handleOn('selected', { markStr })
+
+        let Rects = range.getClientRects();
+        let topRects = Rects[0];
+        let bottomRects = Rects[Rects.length - 1];
+        console.log(topRects);
+        let _top = this.targetNodeRect?.top ?? 0;
+        let _left = this.targetNodeRect?.left ?? 0;
+        // 计算位置
+        let position = {
+            top_left: [topRects.left - _left, topRects.top - _top],
+            top_center: [topRects.left + (topRects.width / 2) - _left, topRects.top - _top],
+            top_right: [topRects.right - _left, topRects.top - _top],
+
+            center_left: [bottomRects.left - _left, topRects.top + ((bottomRects.bottom - topRects.top) / 2) - _top],
+            center: [bottomRects.left + (topRects.right - bottomRects.left) / 2 - _left, topRects.top + ((bottomRects.bottom - topRects.top) / 2) - _top],
+            center_right: [topRects.right - _left, topRects.top + ((bottomRects.bottom - topRects.top) / 2) - _top],
+
+            bottom_left: [bottomRects.left - _left, bottomRects.bottom - _top],
+            bottom_center: [bottomRects.left + (bottomRects.width / 2) - _left, bottomRects.top + bottomRects.height - _top],
+            bottom_right: [bottomRects.right - _left, bottomRects.bottom - _top],
+        };
+
+        this._handleOn('selected', { markStr, range, position })
     }
     /**
      * 范围换取efi

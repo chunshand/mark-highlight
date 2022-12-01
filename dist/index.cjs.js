@@ -339,6 +339,7 @@ var Mark = /** @class */ (function () {
      * 监听鼠标选中后的时间
      */
     Mark.prototype._handleSelected = function () {
+        var _a, _b, _c, _d;
         var Selection = window.getSelection();
         if (!Selection) {
             return;
@@ -350,7 +351,25 @@ var Mark = /** @class */ (function () {
         var range = Selection.getRangeAt(0);
         // 通过查找开始元素 和结束元素在 dom 内容范围
         var markStr = this._handleSelectRangePostion(range);
-        this._handleOn('selected', { markStr: markStr });
+        var Rects = range.getClientRects();
+        var topRects = Rects[0];
+        var bottomRects = Rects[Rects.length - 1];
+        console.log(topRects);
+        var _top = (_b = (_a = this.targetNodeRect) === null || _a === void 0 ? void 0 : _a.top) !== null && _b !== void 0 ? _b : 0;
+        var _left = (_d = (_c = this.targetNodeRect) === null || _c === void 0 ? void 0 : _c.left) !== null && _d !== void 0 ? _d : 0;
+        // 计算位置
+        var position = {
+            top_left: [topRects.left - _left, topRects.top - _top],
+            top_center: [topRects.left + (topRects.width / 2) - _left, topRects.top - _top],
+            top_right: [topRects.right - _left, topRects.top - _top],
+            center_left: [bottomRects.left - _left, topRects.top + ((bottomRects.bottom - topRects.top) / 2) - _top],
+            center: [bottomRects.left + (topRects.right - bottomRects.left) / 2 - _left, topRects.top + ((bottomRects.bottom - topRects.top) / 2) - _top],
+            center_right: [topRects.right - _left, topRects.top + ((bottomRects.bottom - topRects.top) / 2) - _top],
+            bottom_left: [bottomRects.left - _left, bottomRects.bottom - _top],
+            bottom_center: [bottomRects.left + (bottomRects.width / 2) - _left, bottomRects.top + bottomRects.height - _top],
+            bottom_right: [bottomRects.right - _left, bottomRects.bottom - _top],
+        };
+        this._handleOn('selected', { markStr: markStr, range: range, position: position });
     };
     /**
      * 范围换取efi

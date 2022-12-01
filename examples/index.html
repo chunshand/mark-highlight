@@ -68,6 +68,34 @@
         console.log(mark);
         mark.on('selected', (data) => {
             _rangeStr = data.markStr;
+            let arr = [
+                data.position.top_left,
+                data.position.top_center,
+                data.position.top_right,
+                
+                data.position.center_left,
+                data.position.center,
+                data.position.center_right,
+
+                data.position.bottom_left,
+                data.position.bottom_center,
+                data.position.bottom_right,
+            ];
+            for (let i in arr) {
+                let p = arr[i];
+                let el = document.querySelector('.mark-view');
+                let dom = document.createElement('span')
+                dom.style.width = '16px';
+                dom.style.height = '16px';
+                dom.style.backgroundColor = '#000'
+                dom.style.color = '#fff'
+                dom.textContent = i
+                dom.style.position = 'absolute'
+                dom.style.left = p[0] + 'px';
+                dom.style.top = p[1] + 'px';
+                el.appendChild(dom);
+            }
+
         })
         mark.on('render', () => {
             console.log('render');
@@ -91,7 +119,7 @@
         function addHighlight(classNmae) {
             console.log("高亮");
             mark.highlight(_rangeStr, classNmae,
-                (e,str) => {
+                (e, str) => {
                     console.log(str);
                     let rangeStr = e.target.getAttribute('data-id')
                     let r = confirm("是否删除高亮?")
